@@ -1,10 +1,15 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { createStackNavigator, createAppContainer } from "react-navigation";
 import axios from 'axios';
 
+const regex = /<\/?[^>]+(>|$)/g;
 
 class HomeScreen extends React.Component {
+
+  static navigationOptions = {
+    title: 'Search Job',
+  };
 
   constructor(props){
     super(props);
@@ -16,11 +21,10 @@ class HomeScreen extends React.Component {
   render() {
     return (
       <View style={styles.screen}>
-        <Text style={styles.title}>Search Job</Text>
         <TextInput
           style={styles.textInput}
           placeholder={'search'}
-          onChangeText={(txt) => this.setState({txt})}
+          onChangeText={(txt) => this.setState({search: txt})}
           value={this.state.search}
         />
         <Button
@@ -34,6 +38,10 @@ class HomeScreen extends React.Component {
 }
 
 class ListScreen extends React.Component {
+  static navigationOptions = {
+    title: 'Job List',
+  };
+
   constructor(props){
     super(props);
     this.state = {
@@ -58,14 +66,17 @@ class ListScreen extends React.Component {
   render() {
     return (
       <View style={styles.screen}>
-        <Text style={styles.title}>Job List</Text>
         <ScrollView contentContainerStyle={styles.contentContainer}>
           {this.state.jobs.map((job) =>
-            <View style={styles.box} key={job.id}>
-              <Text styles={styles.jobTitle}>{job.title}</Text>
-              <Text styles={styles.jobCompany}>{job.company}</Text>
-              <Text styles={styles.jobType}>{job.type}</Text>
-            </View>
+            <TouchableOpacity 
+              style={styles.box} 
+              key={job.id}
+              onPress={ () => this.props.navigation.navigate('Details',{job: job})}
+            >
+              <Text style={styles.jobTitle}>{job.title}</Text>
+              <Text style={styles.jobCompany}>{job.company}</Text>
+              <Text style={styles.jobType}>{job.type}</Text>
+            </TouchableOpacity>
           )}
         </ScrollView>
       </View>
@@ -74,10 +85,30 @@ class ListScreen extends React.Component {
 }
 
 class DetailsScreen extends React.Component {
+
+  static navigationOptions = {
+    title: 'Job Details',
+  };
+
+  constructor(props){
+    super(props);
+    let temp = this.props.navigation.getParam('job', '');
+    let desc = temp.description.replace(regex, '');
+    this.state = {
+      job: temp,
+      description: desc,
+    }
+  }
+
   render() {
     return (
       <View style={styles.screen}>
-        <Text>Details Screen</Text>
+        <ScrollView contentContainerStyle={styles.contentContainer}>
+          <Text style={styles.title}>{this.state.job.title}</Text>
+          <Text style={[styles.jobCompany, {fontSize: 16}]}>{this.state.job.company}</Text>
+          <Text style={[styles.jobType, {fontSize: 16}]}>{this.state.job.type}</Text>
+          <Text style={styles.description}>{this.state.description}</Text>
+        </ScrollView>
       </View>
     );
   }
@@ -105,7 +136,6 @@ const styles = StyleSheet.create({
     justifyContent: "center" 
   },
   textInput: {
-    color:'white',
     height:40,
     width:280,
     borderColor: 'black',
@@ -114,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal:10,
   },
   box: {
-    height: 75,
+    height: 85,
     width: 300,
     alignSelf:'center',
     borderBottomWidth: 1,
@@ -126,23 +156,25 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    paddingVertical: 10,
+    paddingVertical: 2,
   },
   jobTitle: {
     fontSize: 15,
-    paddingVertical: 10,
     fontWeight: 'bold',
   },
   jobType: {
     fontSize: 10,
-    paddingVertical: 5,
+    color: 'gray'
   },
   jobCompany: {
-    fontSize: 10,
-    paddingVertical: 10,
+    fontSize: 13,
   },
   button: {
     paddingVertical: 10,
+  },
+  description: {
+    fontSize: 14,
+    textAlign: 'justify',
   },
 });
 
